@@ -6,7 +6,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.orderManagement.classMain.Product;
+import com.orderManagement.exceptions.ItemNotFound;
 
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -30,22 +32,22 @@ public class ShoppingCartAPI {
         return shoppingcart.printCartItems();
     }
     
+    // adding item to the cart
     @Path("/items")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    
-    //the map has product_id and customer_id
-    //the cart_item has product_id and quantity
-    // If we pass the JSON as product_id and customer_id
     public Response addItemtocart(CartProduct cartproduct){
     	try {
     		String pid=cartproduct.getProduct_id();
     		shoppingcart.addCartItem(pid,customerId);
     		return Response.status(Response.Status.CREATED).entity(cartproduct).build();
     	}
-    	catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Failed to add the product").build();
-        }
+    	catch(ItemNotFound e) {
+    		return Response.status(Response.Status.NOT_FOUND).entity("The item with id"+cartproduct.getProduct_id()+"is not found").build();
+    	}
+    	catch(SQLException e) {
+    		return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Item not Found").build();
+    	}
     }
     
     // calculate cost of the cart
@@ -62,35 +64,36 @@ public class ShoppingCartAPI {
     
     @Path("/items/{id}")
     @DELETE
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.APPLICATION_JSON)
     public Response deleteItemFromcart(CartProduct cartproduct)  {
     	try {
-    	System.out.println("Product with "+cartproduct.getProduct_id()+" deleted");
     	shoppingcart.removeCartItem(cartproduct.getProduct_id(),customerId);
+    	System.out.println("Product with "+cartproduct.getProduct_id()+" deleted");
     	return Response.status(Response.Status.OK).entity(cartproduct.getProduct_id()).build();
     	}
-    	catch(Exception e) {
+    	catch(ItemNotFound e) {
+    		return Response.status(Response.Status.NOT_FOUND).entity("The item with id"+cartproduct.getProduct_id()+"is not found").build();
+    	}
+    	catch(SQLException e) {
     		return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Item not Found").build();
     	}
     }
    
     
-    //Update the items in the cart
-    
-    @Path("/items")
-    @PUT
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response UpdateCart(CartProduct cartproduct) {
-    	try {
-//    		String pid=product.get("productid");
-//    		int quantity=Integer.parseInt(product.get("quantity"));
-//    		shoppingcart.updateItem(pid, customerId,quantity);
-    		shoppingcart.updateItem(cartproduct.getProduct_id(), cartproduct.getCustomer_id(), cartproduct.getQuantity());
-    		return Response.status(Response.Status.OK).entity(cartproduct.getProduct_id()).build();
-    	}
-    	catch(Exception e) {
-    		return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Failed to Update").build();
-    	}
-    }
+//    //Update the items in the cart
+//    
+//    @Path("/items")
+//    @PUT	
+//    @Produces(MediaType.APPLICATION_JSON)
+//    public Response UpdateCart(CartProduct cartproduct) {
+//    	try {
+//    		shoppingcart.updateItem(cartproduct.getProduct_id(), cartproduct.getCustomer_id(), cartproduct.getQuantity());
+//    		return Response.status(Response.Status.OK).entity(cartproduct.getProduct_id()).build();
+//    	}
+//    	catch(Exception e) {
+//    		return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Failed to Update").build();
+//    	}
+//    }
 }
     

@@ -54,6 +54,7 @@ public class CustomerMenu implements Menu{
             System.out.println("4. View the products in the cart");
             System.out.println("5. View the total cost of products in the shopping cart");
             System.out.println("6. Checkout the order");
+            System.out.println("7. Update the product in the cart");
             System.out.println("7. Exit");
             System.out.println("Enter your choice");
             int input1= sc.nextInt();
@@ -87,7 +88,12 @@ public class CustomerMenu implements Menu{
                     
                 case REMOVE_ITEMS_FROM_CART:
                 	shopcart.viewCartItems();
-                    System.out.println("Enter the product ID");
+                	List<String> items=new ArrayList<>(shopcart.cart_items.keySet());
+                	if(items.size()==0) {
+                		System.out.println("The cart is empty");
+                		return;
+                	}
+                    System.out.println("Enter the product ID that you want to update");
                     product_id= sc.next();
                     try{
                         shopcart.removeCartItem(product_id,customerID);

@@ -32,19 +32,27 @@ public class CatalogueAPI {
     @Path("/Products/{id}")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Product getProduct(@PathParam("id") String id) {
-        return catalogue.getProduct(id);
+    public Response getProduct(@PathParam("id") String id){
+    	Product product=catalogue.getProduct(id);
+    	if(product!=null) {
+    		return Response.status(Response.Status.OK).entity(product).build();
+    	}
+        return Response.status(Response.Status.NOT_FOUND).entity("The product doesnt exist").build();
     }
 
     @Path("/Products")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response addProduct(Product product) throws ItemAlreadyExists{
+    public Response addProduct(Product product) throws SQLException, ItemAlreadyExists{
     	try {
     	 catalogue.addItem(product);
     	 return Response.status(Response.Status.CREATED).entity(product).build();
-    	}catch (Exception e) {
+    	}
+    	catch(ItemAlreadyExists e) {
+    		return Response.status(Response.Status.CONFLICT).entity("The item is already in catalogue").build();
+    	}
+    	catch (SQLException e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Failed to add the product").build();
         }
     	
@@ -53,10 +61,18 @@ public class CatalogueAPI {
     @Path("/Products/{id}")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    public void deleteProduct(@PathParam("id") String id) throws ItemNotFound, SQLException  {
-    	System.out.println("Product with "+id+" deleted");
+    public Response deleteProduct(@PathParam("id") String id) throws ItemNotFound, SQLException  {
+    	try {
     	catalogue.deleteItem(id);
-    } 
+    	return Response.status(Response.Status.OK).entity("The item with the id "+id+" is deleted successfully").build();
+    	}
+    	catch(ItemNotFound e) {
+    		return Response.status(Response.Status.NOT_FOUND).entity("The item with id "+id+" is not found").build();
+    	}
+    	catch(SQLException e) {
+    		 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Failed to delete the product").build();
+    	}
+    }
     
     @Path("/Products")
     @PUT

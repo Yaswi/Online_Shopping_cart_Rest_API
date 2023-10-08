@@ -16,7 +16,11 @@ public class ShoppingCart{
     Catalogue catalogue= Catalogue.getInstance();
     CartProduct cartproduct=new CartProduct();
     
-    private LinkedHashMap<String,Integer> cart_items;
+    public LinkedHashMap<String,Integer> cart_items;
+    
+    ShoppingCart(){
+    	
+    }
     
     // Retrieving all the cart item details related to customerId
     // cart is storing productid, quantity
@@ -50,25 +54,20 @@ public class ShoppingCart{
     }
 
     public void removeCartItem (String productID,String customerID) throws ItemNotFound, SQLException{
-        if(!cart_items.containsKey(productID)){
+    	if(!cart_items.containsKey(productID)){
             throw new ItemNotFound("The below with the id"+productID+"is not in the cart");
         }
+        int quantity=cart_items.get(productID);
+        if(quantity==1){
+        	cart_items.remove(productID);
+        	cartDAO.deleteItem(productID,customerID);
+        }
         else{
-            cart_items.remove(productID);
-            cartDAO.deleteItem(productID, customerID);
+        	quantity=quantity-1;
+            cart_items.put(productID,quantity);
+            cartDAO.updateItem(productID, customerID, quantity);
         }
     }
-    
-    // didnt call this function in the customerMenu, update once .
-    public void updateItem(String productID,String customerID ,int quantity) throws ItemNotFound,SQLException{
-    	//If the user want to remove the element from cart, it is set to zero	
-        if (quantity == 0)
-            cart_items.remove(productID);
-        else
-            cart_items.compute(productID, (key,value) -> (value==null)? null : value--);
-            cartDAO.updateItem(productID, customerID, quantity);
-    }
-
 
     public void viewCartItems(){
     	if (cart_items.size()==0){
